@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+
+<html>
+
+
+<head>
+    <!--<link href="https://getbootstrap.com/docs/4.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">-->
+    <link rel='stylesheet' href='https://code.jquery.com/ui/1.11.1/themes/smoothness/jquery-ui.css'>
+    <script src='https://code.jquery.com/jquery-1.12.4.js'></script>
+    <script src='https://code.jquery.com/ui/1.12.1/jquery-ui.js'></script>
+   
+   <script>
+       
+       const url = 'https://19ee-181-230-219-190.ngrok.io/student'
+       window.onload = function() {
+            $('#popUp').hide()
+            ObtenerList()
+        }
+
+       /////Promesas////
+
+        function DevolverListFutb() {
+          return new Promise (function(resolve, reject){
+      var request = new XMLHttpRequest();
+      request.open('GET', url + '/getAll');
+      request.responseType = 'json';
+      request.onload=function(){
+         if(request.status== 200){
+             resolve(request.response);
+      
+         }
+         else{
+             reject(Error('No se pudo cargar la imagen' + request.statusText));
+      
+         }
+      
+      }
+      request.onerror=function(){
+         reject(Error('Lo sentimos, ocurrio un error'));
+      }
+      request.send();
+      });
+       }
+
+       
+       
+       function añadirFutb(){
+        return new Promise (function(resolve, reject){
+      var request = new XMLHttpRequest();
+      request.open('POST', url)
+      request.setRequestHeader('Content-Type', 'application/json')
+      var futbolista = JSON.stringify({
+        'dni': document.getElementById('dni').value,
+        'lastName': document.getElementById('lastName').value,
+        'firstName': document.getElementById('firstName').value,
+        'email': document.getElementById('email').value,
+         'cohort': '0',
+         'status': 'activo',
+        'gender': 'masculino',
+        'address': 'abc123',
+        'phone': '000'
+      })
+
+      request.onload = function(){
+
+        if(request.status=201){
+            resolve(request.response)
+        }else{
+            reject(Error(request.statusText))
+        }
+      }
+      request.onerror =function(){
+        reject(Error('Error: unexpected network error.'))
+      }
+      request.send(futbolista)
+
+       })
+    }
+
+
+
+    function EliminarFutb(id){
+        return new Promise(function(resolve, reject) {
+                var request = new XMLHttpRequest()
+
+                request.open('POST', url + `/${id}/delete`)
+                request.setRequestHeader('Content-Type', 'application/json')
+                request.onload = function() {
+                    if (request.status == 200) {
+                        resolve(request.response)
+                    } else {
+                        reject(Error(request.statusText))
+                    }
+                }
+                request.onerror = function() {
+                    reject(Error('Error: unexpected network error.'))
+                }
+                request.send()
+
+
+        })
+    }
+
+
+    function ModificarFutb() {
+            return new Promise(function(resolve, reject) {
+                var request = new XMLHttpRequest()
+                request.open('POST', url + `/${document.getElementsByName('id2')[0].value}/update`)
+                request.setRequestHeader('Content-Type', 'application/json')
+                var futb = JSON.stringify({
+                    'dni': document.getElementsByName('dni2')[0].value,
+                    'lastName': document.getElementsByName('lastName2')[0].value,
+                    'firstName': document.getElementsByName('firstName2')[0].value,
+                    'email': document.getElementsByName('email2')[0].value,
+                    'cohort': '0',
+                    'status': 'activo',
+                    'gender': 'masculino',
+                    'address': 'abc123',
+                    'phone': '000'
+                })
+                request.onload = function() {
+                    if (request.status == 200) {
+                        resolve(request.response)
+                    } else {
+                        reject(Error(request.statusText))
+                    }
+                }
+                request.onerror = function() {
+                    reject(Error('Error: unexpected network error.'))
+                }
+                request.send(futbolista)
+            })
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+///////////////////////////////////////////////////
+      
+      
+     function ObtenerList(){
+      
+      DevolverListFutb().then((response)=>{
+        var tbody = document.querySelector('tbody')
+        tbody.innerHTML = ''
+
+     response.forEach(element => {
+        
+      var row =  tbody.insertRow()
+      var id = row.insertCell()
+      id.innerHTML= element.id
+
+      var dni = row.insertCell()
+      dni.innerHTML= element.dni
+
+      var lastName = row.insertCell()
+      lastName.innerHTML= element.lastName
+
+      var firstName = row.insertCell()
+      firstName.innerHTML= element.firstName
+
+      var email = row.insertCell()
+      email.innerHTML= element.email
+
+      
+
+      var futbolista = JSON.stringify({
+        'id' : element.id,
+        'dni': element.dni,
+        'lastName' : element.lastName,
+        'firstName' : element.firstName,
+        'email' : element.email,
+
+      })
+      var view= row.insertCell()
+      view.innerHTML = `<button onclick='VerEst(${futbolista})'>View</button>`
+      var del = row.insertCell()
+        del.innerHTML = `<button onclick='EliminarEstud(${element.id})'>Delete</button>`
+      
+      
+
+     })
+     document.getElementById('dni').value = ' '
+     document.getElementById('lastName').value = ''
+    document.getElementById('firstName').value = ''
+    document.getElementById('email').value = ''
+    document.getElementById('dni').focus()
+
+      })
+      .catch((reason)=> {
+         console.log(Error(reason));
+      })
+      
+    }
+    
+    function GuardarFutb() {
+            if (document.getElementById('dni').value.trim() !== '' &&
+                document.getElementById('lastName').value.trim() !== '' &&
+                document.getElementById('firstName').value.trim() !== '' &&
+                document.getElementById('email').value.trim() !== '') {
+                añadirFutb().then(() => {
+                    ObtenerEst()
+                }).catch(reason => {
+                    console.error(reason)
+                })
+            }
+        }
+
+        function VerFutb(futbolista) {
+            document.getElementsByName('id2')[0].value = futbolista.id
+            document.getElementsByName('dni2')[0].value = futbolista.dni
+            document.getElementsByName('lastName2')[0].value = futbolista.lastName
+            document.getElementsByName('firstName2')[0].value = futbolista.firstName
+            document.getElementsByName('email2')[0].value = futbolista.email
+            $('#popUp').dialog({
+                closeText: ''
+            }).css('font-size', '15px')
+        }
+
+        function EliminarFutb(id) {
+            EliminarFutb(id).then(() => {
+                ObtenerList()
+            }).catch(reason => {
+                console.error(reason)
+            })
+        }
+
+        function ActualizarFutb() {
+            if (document.getElementsByName('dni2')[0].value.trim() !== '' &&
+                document.getElementsByName('lastName2')[0].value.trim() !== '' &&
+                document.getElementsByName('firstName2')[0].value.trim() !== '' &&
+                document.getElementsByName('email2')[0].value.trim() !== '') {
+                ModificarFutb().then(() => {
+                    $('#popUp').dialog('close')
+                    ObtenerList()
+                }).catch(reason => {
+                    console.error(reason)
+                })
+            }
+        }
+         
+              
+              
+            </script>
+
+</head>
+
+    <body>
+        <div class ='container my-5 text-center'>
+            
+        
+        <div class="mt-5" >
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th scope="col">id </th>
+                        <th scope="col">dni</th>
+                        <th scope="col">lastName</th>
+                        <th scope="col">firstName</th>
+                        <th style='text-align: left'>Email</th>
+                        
+                    </tr>
+                    <tbody >
+                        
+
+
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td></td>
+                            <td><input id='dni' /></td>
+                            <td><input id='lastName' /></td>
+                            <td><input id='firstName' /></td>
+                            <td><input id='email' /></td>
+                            <td colspan='2' style='text-align: center'><button onclick='GuardarFutb()'>Add</button></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            
+                <div id='popUp'>
+                    <table>
+                        <tr>
+                            <td><label for='id2' style='font-weight: bold'>Id</label></td>
+                            <td><input name='id2' style='text-align: right' readonly /></td>
+                        </tr>
+                        <tr>
+                            <td><label for='dni2' style='font-weight: bold'>Dni</label></td>
+                            <td><input name='dni2' style='text-align: right' /></td>
+                        </tr>
+                        <tr>
+                            <td><label for='lastName2' style='font-weight: bold'>Last Name</label></td>
+                            <td><input name='lastName2' style='text-align: right' /></td>
+                        </tr>
+                        <tr>
+                            <td><label for='firstName2' style='font-weight: bold'>First Name</label></td>
+                            <td><input name='firstName2' style='text-align: right' /></td>
+                        </tr>
+                        <tr>
+                            <td><label for='email2' style='font-weight: bold'>Email</label></td>
+                            <td><input name='email2' style='text-align: right' /></td>
+                        </tr>
+                        <tr>
+                            <td colspan='2' style='text-align: center'><button onclick='ActualizarFutb()'>Update</button></td>
+                        </tr>
+                    </table>
+                </div>
+            </body>
+            
+
+    
+    
+
+
+
+
+</html>
+
+
+
+
+
+
+
